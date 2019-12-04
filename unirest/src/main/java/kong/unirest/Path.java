@@ -97,4 +97,11 @@ class Path {
     public String rawPath() {
         return rawPath;
     }
+
+    public String baseUrl() {
+        if(url.contains("?")){
+            return url.substring(0, url.indexOf("?"));
+        }
+        return url;
+    }
 }
