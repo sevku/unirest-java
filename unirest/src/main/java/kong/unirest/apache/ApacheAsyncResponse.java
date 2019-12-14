@@ -26,31 +26,59 @@
 package kong.unirest.apache;
 
 import kong.unirest.Config;
-import kong.unirest.Proxy;
-import org.apache.hc.client5.http.config.RequestConfig;
-import org.apache.hc.core5.http.HttpHost;
-import org.apache.hc.core5.util.Timeout;
+import kong.unirest.RawResponseBase;
+import org.apache.hc.client5.http.async.methods.SimpleHttpResponse;
 
-import java.util.concurrent.TimeUnit;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 
+class ApacheAsyncResponse extends RawResponseBase {
 
-class RequestOptions {
-    static RequestConfig toRequestConfig(Config config) {
-        Integer connectionTimeout = config.getConnectionTimeout();
-        Integer socketTimeout = config.getSocketTimeout();
-        HttpHost proxy = toApacheProxy(config.getProxy());
-        return RequestConfig.custom()
-                .setConnectTimeout(Timeout.of(connectionTimeout, TimeUnit.MILLISECONDS))
-                //.setSocketTimeout(socketTimeout)
-                .setConnectionRequestTimeout(Timeout.of(socketTimeout, TimeUnit.MILLISECONDS))
-                .setProxy(proxy)
-                .build();
+    private final SimpleHttpResponse r;
+
+    ApacheAsyncResponse(SimpleHttpResponse r, Config config) {
+        super(r, config);
+        this.r = r;
     }
 
-    public static HttpHost toApacheProxy(Proxy proxy){
-        if(proxy == null){
-            return null;
-        }
-        return new HttpHost(proxy.getHost(), proxy.getPort());
+    @Override
+    public InputStream getContent() {
+        return new ByteArrayInputStream(r.getBodyBytes());
+    }
+
+    @Override
+    public byte[] getContentAsBytes() {
+        return r.getBodyBytes();
+    }
+
+    @Override
+    public String getContentAsString() {
+        return r.getBodyText();
+    }
+
+    @Override
+    public String getContentAsString(String charset) {
+        return r.getBodyText();
+    }
+
+    @Override
+    public InputStreamReader getContentReader() {
+        return null;
+    }
+
+    @Override
+    public boolean hasContent() {
+        return r.getBodyBytes().length > 0;
+    }
+
+    @Override
+    public String getContentType() {
+        return r.getContentType().getMimeType();
+    }
+
+    @Override
+    public String getEncoding() {
+        return null;
     }
 }

@@ -30,8 +30,6 @@ package BehaviorTests;
 import kong.unirest.Config;
 import kong.unirest.Unirest;
 import kong.unirest.UnirestException;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -115,13 +113,13 @@ public class TimeoutTest extends BddTest {
         }
 
         try {
-            Unirest.config().asyncClient(HttpAsyncClientBuilder.create().build());
+          //  Unirest.config().asyncClient(HttpAsyncClientBuilder.create().build());
         } catch (Exception e) {
             fail();
         }
 
         try {
-            Unirest.config().asyncClient(HttpAsyncClientBuilder.create().build());
+           // Unirest.config().asyncClient(HttpAsyncClientBuilder.create().build());
             Unirest.config().connectTimeout(1000).socketTimeout(2000);
             fail();
         } catch (Exception e) {
@@ -129,12 +127,13 @@ public class TimeoutTest extends BddTest {
         }
 
         try {
-            Unirest.config().httpClient(HttpClientBuilder.create().build());
+           // Unirest.config().httpClient(HttpClientBuilder.create().build());
             Unirest.config().connectTimeout(1000).socketTimeout(2000);
             fail();
         } catch (Exception e) {
             // Ok
         }
+        fail();
     }
 
     private String findAvailableIpAddress() throws IOException {

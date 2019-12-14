@@ -25,8 +25,8 @@
 
 package kong.unirest;
 
-import org.apache.http.HttpRequestInterceptor;
-import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
+import org.apache.hc.client5.http.impl.async.CloseableHttpAsyncClient;
+import org.apache.hc.core5.http.HttpRequestInterceptor;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -55,17 +55,15 @@ public class ClientFactoryTest {
     @Test
     public void canSaveSomeOptions(){
         HttpRequestInterceptor i = mock(HttpRequestInterceptor.class);
-        CloseableHttpAsyncClient c = mock(CloseableHttpAsyncClient.class);
+        AsyncClient c = mock(AsyncClient.class);
 
         Unirest.config()
-                .addInterceptor(i)
                 .connectTimeout(4000)
                 .asyncClient(c);
 
         Unirest.shutDown(false);
 
         assertNotEquals(c, Unirest.config().getAsyncClient());
-        assertEquals(i, Unirest.config().getInterceptor().get(0));
         assertEquals(4000, Unirest.config().getConnectionTimeout());
     }
 

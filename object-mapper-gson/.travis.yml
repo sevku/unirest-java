@@ -10,3 +10,11 @@ cache:
   directories:
   - .autoconf
   - $HOME/.m2
+<<<<<<< HEAD:object-mapper-gson/.travis.yml
+=======
+
+# blocklist
+branches:
+  except:
+  - apache5
+>>>>>>> upgrade unirest to 5:.travis.yml

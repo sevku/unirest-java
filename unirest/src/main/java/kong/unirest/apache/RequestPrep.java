@@ -25,15 +25,16 @@
 
 package kong.unirest.apache;
 
-import kong.unirest.*;
-import org.apache.http.Header;
-import org.apache.http.HttpEntity;
-import org.apache.http.client.methods.*;
-import org.apache.http.message.BasicHeader;
-import org.apache.http.nio.entity.NByteArrayEntity;
+import kong.unirest.Config;
+import kong.unirest.HttpMethod;
+import kong.unirest.HttpRequest;
+import kong.unirest.UnirestException;
+import org.apache.hc.client5.http.async.methods.SimpleHttpRequest;
+import org.apache.hc.client5.http.classic.methods.*;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.core5.http.message.BasicHeader;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
@@ -43,7 +44,7 @@ class RequestPrep {
     private static final String ACCEPT_ENCODING_HEADER = "accept-encoding";
     private static final String USER_AGENT_HEADER = "user-agent";
     private static final String USER_AGENT = "unirest-java/3.1.00";
-    private static final Map<HttpMethod, Function<String, HttpRequestBase>> FACTORIES;
+    private static final Map<HttpMethod, Function<String, ClassicHttpRequest>> FACTORIES;
     private final HttpRequest request;
     private Config config;
     private final boolean async;
@@ -65,15 +66,15 @@ class RequestPrep {
         this.async = async;
     }
 
-    HttpRequestBase prepare(RequestConfigFactory configFactory) {
-        HttpRequestBase reqObj = getHttpRequestBase(configFactory);
+    ClassicHttpRequest prepare() {
+        ClassicHttpRequest reqObj = getHttpRequestBase();
 
         setBody(reqObj);
 
         return reqObj;
     }
 
-    private HttpRequestBase getHttpRequestBase(RequestConfigFactory configFactory) {
+    private ClassicHttpRequest getHttpRequestBase() {
         if (!request.getHeaders().containsKey(USER_AGENT_HEADER)) {
             request.header(USER_AGENT_HEADER, USER_AGENT);
         }
@@ -83,42 +84,34 @@ class RequestPrep {
 
         try {
             String url = request.getUrl();
-            HttpRequestBase reqObj = FACTORIES.computeIfAbsent(request.getHttpMethod(), this::register).apply(url);
+            ClassicHttpRequest reqObj = FACTORIES.computeIfAbsent(request.getHttpMethod(), this::register).apply(url);
             request.getHeaders().all().stream().map(this::toEntries).forEach(reqObj::addHeader);
-            reqObj.setConfig(configFactory.apply(config, request));
+            //reqObj.setConfig(configFactory.apply(config, request));
             return reqObj;
         } catch (RuntimeException e) {
             throw new UnirestException(e);
         }
     }
 
-    private Function<String, HttpRequestBase> register(HttpMethod method) {
+    private Function<String, ClassicHttpRequest> register(HttpMethod method) {
         return u -> new ApacheRequestWithBody(method, u);
     }
 
-    private Header toEntries(kong.unirest.Header k) {
+    private BasicHeader toEntries(kong.unirest.Header k) {
         return new BasicHeader(k.getName(), k.getValue());
     }
 
-    private void setBody(HttpRequestBase reqObj) {
+    private void setBody(ClassicHttpRequest reqObj) {
         if (request.getBody().isPresent()) {
             ApacheBodyMapper mapper = new ApacheBodyMapper(request);
             HttpEntity entity = mapper.apply();
-            if (async) {
-                if (reqObj.getHeaders(CONTENT_TYPE) == null || reqObj.getHeaders(CONTENT_TYPE).length == 0) {
-                    reqObj.setHeader(entity.getContentType());
-                }
-                try {
-                    ByteArrayOutputStream output = new ByteArrayOutputStream();
-                    entity.writeTo(output);
-                    NByteArrayEntity en = new NByteArrayEntity(output.toByteArray());
-                    ((HttpEntityEnclosingRequestBase) reqObj).setEntity(en);
-                } catch (IOException e) {
-                    throw new UnirestException(e);
-                }
-            } else {
-                ((HttpEntityEnclosingRequestBase) reqObj).setEntity(entity);
-            }
+            reqObj.setEntity(entity);
         }
+    }
+
+    public SimpleHttpRequest prepareSimple() {
+        SimpleHttpRequest r = new SimpleHttpRequest(request.getHttpMethod().name(), request.getUrl());
+        request.getHeaders().all().stream().map(this::toEntries).forEach(r::addHeader);
+        return r;
     }
 }
