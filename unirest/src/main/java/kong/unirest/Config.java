@@ -95,6 +95,7 @@ public class Config {
     private void setDefaults() {
         apacheinterceptors.clear();
         proxy = null;
+        cache = null;
         headers = new Headers();
         connectionTimeout = DEFAULT_CONNECTION_TIMEOUT;
         socketTimeout = DEFAULT_SOCKET_TIMEOUT;
@@ -542,7 +543,7 @@ public class Config {
      */
     public void cacheResponses(boolean value) {
         if(value){
-            this.cache = Cache.DEFAULT;
+            this.cache = new Cache();
         } else {
             this.cache = null;
         }
@@ -694,7 +695,14 @@ public class Config {
         if (!asyncClientIsReady()) {
             buildAsyncClient();
         }
-        return asyncClient.get();
+        return getFinalAsyncClient();
+    }
+
+    private AsyncClient getFinalAsyncClient(){
+        if(cache == null){
+            return asyncClient.get();
+        }
+        return cache.wrapAsync(asyncClient.get());
     }
 
     private boolean asyncClientIsReady() {
