@@ -49,6 +49,7 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
 public class RequestCapture {
+    public String requestId = UUID.randomUUID().toString();
     public ListMultimap<String, String> headers = LinkedListMultimap.create();
     public List<FormPart> files = new ArrayList<>();
     public ArrayListMultimap<String, String> params = ArrayListMultimap.create();
